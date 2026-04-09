@@ -15,7 +15,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class User extends CreatedUpdatedAt {
     @Id
-    @Tsid
+    @Tsid //서버에서 시간과 랜덤 기반으로 id생성 후 DB로 날림
     private Long id;
 
     @Column(unique = true, nullable = false)

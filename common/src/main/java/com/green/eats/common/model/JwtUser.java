@@ -2,6 +2,7 @@ package com.green.eats.common.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 //JWT를 만들 때 payload에 담을 객체
@@ -11,7 +12,6 @@ import lombok.ToString;
 public class JwtUser {
     private long signedUserId;
     private String name;
+    //private UserRole userRole;
 
-    public JwtUser(Long id) {
-    }
 }

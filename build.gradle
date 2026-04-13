@@ -2,7 +2,7 @@ plugins {
     id 'java'
     // 하위 모듈에서 사용할 플러그인들의 버전을 여기서 중앙 제어합니다.
     // apply false는 루트 프로젝트 자체에는 이 기능을 적용하지 않겠다는 뜻입니다.
-    id 'org.springframework.boot' version '4.0.5' apply false
+    id 'org.springframework.boot' version '4.0.4' apply false //kafka가 4.0.5 버전이 없어서 4.0.4로 바꿔서 다운
     id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 

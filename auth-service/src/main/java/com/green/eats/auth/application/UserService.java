@@ -18,10 +18,16 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public void signup(UserSignupReq req) {
+        //비밀번호 암호화해서 담기
+        String hashedPassword = passwordEncoder.encode( req.getPassword() );
+        log.info("hashedPassword: {}", hashedPassword);
+        req.setPassword(hashedPassword);
+
+
         //회원가입
         User newUser = new User();
         newUser.setEmail(req.getEmail());
-        newUser.setPassword(req.getPassword());
+        newUser.setPassword( hashedPassword );
         newUser.setName(req.getName());
         newUser.setAddress(req.getAddress());
 

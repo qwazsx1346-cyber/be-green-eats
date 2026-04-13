@@ -37,7 +37,7 @@ public class UserController {
         User signedUser = userService.signin( req );
 
         //인증 쿠키
-        JwtUser jwtUser = new JwtUser( signedUser.getId() );
+        JwtUser jwtUser = new JwtUser( signedUser.getId(), signedUser.getName() );
         jwtTokenManager.issue(res, jwtUser);
 
         //리턴은 무엇을 해야하나?

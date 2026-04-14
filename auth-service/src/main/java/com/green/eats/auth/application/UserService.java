@@ -26,10 +26,11 @@ public class UserService {
 
         //회원가입
         User newUser = new User();
-        newUser.setEmail(req.getEmail());
+        newUser.setEmail( req.getEmail() );
         newUser.setPassword( hashedPassword );
-        newUser.setName(req.getName());
-        newUser.setAddress(req.getAddress());
+        newUser.setName( req.getName() );
+        newUser.setAddress( req.getAddress() );
+        newUser.setEnumUserRole( req.getUserRole() );
 
         userRepository.save(newUser);
     }

@@ -19,4 +19,5 @@ public class MenuGetRes {
         this.stockQuantity = menu.getStockQuantity();
         this.menuCategory = menu.getEnumMenuCategory();
     }
+
 }

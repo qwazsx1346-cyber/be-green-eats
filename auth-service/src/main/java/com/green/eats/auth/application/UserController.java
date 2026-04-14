@@ -37,14 +37,16 @@ public class UserController {
         User signedUser = userService.signin( req );
 
         //인증 쿠키
-        JwtUser jwtUser = new JwtUser( signedUser.getId(), signedUser.getName() );
+        JwtUser jwtUser = new JwtUser( signedUser.getId()
+                                    , signedUser.getName()
+                                    , signedUser.getEnumUserRole() );
         jwtTokenManager.issue(res, jwtUser);
 
         //리턴은 무엇을 해야하나?
         UserSigninRes resultData = UserSigninRes.builder()
-            .id( signedUser.getId() )
-            .name( signedUser.getName() )
-            .build();
+                .id( signedUser.getId() )
+                .name( signedUser.getName() )
+                .build();
 
         return ResultResponse.builder()
             .resultMessage("로그인 성공")

@@ -1,5 +1,6 @@
 package com.green.eats.gateway.security;
 
+import com.green.eats.common.model.EnumUserRole;
 import com.green.eats.gateway.filter.TokenAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +32,8 @@ public class WebSecurityConfiguration {
         .cors( cors -> cors.configurationSource(corsConfigurationSource()) )
         //인가처리 (권한처리)
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/order/**", "/api/store/menu").authenticated() //막아야될거 적어준것
+            .requestMatchers("/api/order/**").authenticated() //막아야될거 적어준것
+            .requestMatchers("/api/store/menu").hasRole(EnumUserRole.ADMIN.name())
             .anyRequest().permitAll() //이외에 것들은 다 허용한다는 뜻.
             //anyRequest().authenticated()얘네는 무조건 허용한다는 뜻
             //막아야되는 애들 걸려면  anyRequest. permitAll로 해줘야함

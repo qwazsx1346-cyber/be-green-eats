@@ -15,7 +15,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/store")
+//@RequestMapping("/api/store") yaml파일 1~3번라인 에서 따로 설정해줬기 때문에 필요없음
 @RequiredArgsConstructor
 public class StoreController {
     private final StoreService storeService;

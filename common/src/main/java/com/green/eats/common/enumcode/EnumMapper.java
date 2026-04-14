@@ -12,6 +12,11 @@ public class EnumMapper {
     factory.put(key, toEnumValues(e));
   }
 
+  //추가: 이미 변환된 리스트를 직접 저장(스캐너용)
+  public void put(String key, List<EnumMapperValue> values) {
+      factory.put(key, values);
+  }
+
   // e.getEnumConstants(): SchoolTypeCode[] schoolTypeCodeArray = [ SchoolTypeCode.ELEMENTARY, SchoolTypeCode.MIDDLE, SchoolTypeCode.HIGH ];
   private List<EnumMapperValue> toEnumValues(Class<? extends EnumMapperType> e) {
     return Arrays.stream(e.getEnumConstants()) // Array to Stream

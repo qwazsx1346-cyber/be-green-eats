@@ -2,6 +2,7 @@ package com.green.eats.auth.application;
 
 import com.green.eats.auth.application.model.UserSigninReq;
 import com.green.eats.auth.application.model.UserSignupReq;
+import com.green.eats.auth.application.model.UserUpdateReq;
 import com.green.eats.auth.entity.User;
 import com.green.eats.common.constants.UserEventType;
 import com.green.eats.common.model.UserEvent;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
@@ -38,7 +40,9 @@ public class UserService {
 
         userRepository.save(newUser);
 
+        //여기부터 59번라인까지는 내가 너희에게 신호를 쏴줄게~하는 친구
         UserEvent userEvent = UserEvent.builder()
+            //아래는 내가 보내고싶은 데이터들
             .userId( newUser.getId() )
             .name( newUser.getName() )
             .eventType( UserEventType.CREATE )
@@ -71,6 +75,36 @@ public class UserService {
 
     private void notFoundUser() {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이디, 비밀번호를 확인해 주세요.");
+    }
+
+    @Transactional
+    public void updateUser(Long userId, UserUpdateReq req) {
+        // 1. 유저 조회
+        User user = userRepository.findById(userId)
+            .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
+
+        // 2. 유저 정보 수정
+        user.setName( req.getName() );
+        user.setAddress( req.getAddress() );
+        // userRepository.save() 안 해도 됨 → @Transactional이 자동으로 감지해서 저장
+
+        // 3. Kafka에 UPDATE 이벤트 발행(signup이랑 구조 똑같이)
+        UserEvent userEvent = UserEvent.builder()
+            .userId( user.getId() )
+            .name( user.getName() )
+            .eventType( UserEventType.UPDATE ) //회원가입에서 여기 이부분만 다름
+            .build();
+
+        kafkaTemplate.send("user-topic", String.valueOf(user.getId()), userEvent)
+            .whenComplete((result, ex) -> {
+                if (ex == null) {
+                    log.info("[Kafka Success] Topic: {}, Offset: {}",
+                        result.getRecordMetadata().topic(),
+                        result.getRecordMetadata().offset());
+                } else  {
+                    log.error("[Kafka Failure] 원인: {}", ex.getMessage());
+                }
+            });
     }
 
 }

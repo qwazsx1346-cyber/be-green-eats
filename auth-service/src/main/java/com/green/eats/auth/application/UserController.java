@@ -3,6 +3,7 @@ package com.green.eats.auth.application;
 import com.green.eats.auth.application.model.UserSigninReq;
 import com.green.eats.auth.application.model.UserSigninRes;
 import com.green.eats.auth.application.model.UserSignupReq;
+import com.green.eats.auth.application.model.UserUpdateReq;
 import com.green.eats.auth.entity.User;
 import com.green.eats.common.model.JwtUser;
 import com.green.eats.common.model.ResultResponse;
@@ -53,4 +54,14 @@ public class UserController {
             .resultData(resultData)
             .build();
     }
+
+    @PutMapping("/{userId}")
+    public ResultResponse<?> updateUser(@PathVariable Long userId,
+                                        @RequestBody UserUpdateReq req) {
+        userService.updateUser(userId, req);
+        return ResultResponse.builder()
+            .resultMessage("success")
+            .build();
+    }
+
 }

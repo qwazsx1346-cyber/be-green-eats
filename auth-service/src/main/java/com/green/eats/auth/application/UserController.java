@@ -5,8 +5,10 @@ import com.green.eats.auth.application.model.UserSigninRes;
 import com.green.eats.auth.application.model.UserSignupReq;
 import com.green.eats.auth.application.model.UserUpdateReq;
 import com.green.eats.auth.entity.User;
+import com.green.eats.common.auth.UserContext;
 import com.green.eats.common.model.JwtUser;
 import com.green.eats.common.model.ResultResponse;
+import com.green.eats.common.model.UserDto;
 import com.green.eats.common.security.JwtTokenManager;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -55,12 +57,31 @@ public class UserController {
             .build();
     }
 
-    @PutMapping("/{userId}")
-    public ResultResponse<?> updateUser(@PathVariable Long userId,
-                                        @RequestBody UserUpdateReq req) {
-        userService.updateUser(userId, req);
+    @PostMapping("/signout")
+    public ResultResponse<?> signout(HttpServletResponse res) {
+        jwtTokenManager.signOut(res);
+
+        return ResultResponse.builder()
+            .resultMessage("로그아웃 성공")
+            .build();
+    }
+
+    @PutMapping
+    public ResultResponse<?> updateUser(@RequestBody UserUpdateReq req) {
+        //PathVariable 대신 JWT에서 userId 꺼내기
+        UserDto userDto = UserContext.get(); //로그인한 유저 정보
+        userService.updateUser(userDto.id(), req);
         return ResultResponse.builder()
             .resultMessage("success")
+            .build();
+    }
+
+    @DeleteMapping
+    public ResultResponse delUser() {
+        UserDto userDto = UserContext.get();
+        userService.delUser(userDto.id());
+        return ResultResponse.builder()
+            .resultMessage("회원탈퇴 성공")
             .build();
     }
 

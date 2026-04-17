@@ -32,4 +32,8 @@ public class User extends CreatedUpdatedAt {
 
     @Column(nullable = false, length = 2)
     private EnumUserRole enumUserRole;
+
+    @Column(nullable = false)
+    private Boolean isDel; //wrapper Type, 대문자는 레퍼런스 타입, 소문자는 프라머티브 타입, 자바는 둘 다 지원가능,c#은 대문자만 가능
+
 }

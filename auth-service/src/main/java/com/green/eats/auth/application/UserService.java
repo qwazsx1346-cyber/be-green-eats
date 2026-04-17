@@ -37,8 +37,11 @@ public class UserService {
         newUser.setName( req.getName() );
         newUser.setAddress( req.getAddress() );
         newUser.setEnumUserRole( req.getUserRole() );
+        newUser.setIsDel( false );
 
         userRepository.save(newUser);
+
+        //kafkaEvent(newUser.getId(), newUser.getName(), UserEventType.CREATE); 이 한줄로 아래작업 끝
 
         //여기부터 59번라인까지는 내가 너희에게 신호를 쏴줄게~하는 친구
         UserEvent userEvent = UserEvent.builder()
@@ -83,6 +86,8 @@ public class UserService {
         User user = userRepository.findById(userId)
             .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
 
+        //kafkaEvent(user.getId(), user.getName(), UserEventType.UPDATE); 이 한줄로 아래작업 끝
+
         // 2. 유저 정보 수정
         user.setName( req.getName() );
         user.setAddress( req.getAddress() );
@@ -96,6 +101,36 @@ public class UserService {
             .build();
 
         kafkaTemplate.send("user-topic", String.valueOf(user.getId()), userEvent)
+            .whenComplete((result, ex) -> {
+                if (ex == null) {
+                    log.info("[Kafka Success] Topic: {}, Offset: {}",
+                        result.getRecordMetadata().topic(),
+                        result.getRecordMetadata().offset());
+                } else  {
+                    log.error("[Kafka Failure] 원인: {}", ex.getMessage());
+                }
+            });
+    }
+
+    //@Transactional 이걸 붙이면 userRepository.save(user); 이 작업 안해줘도 됨.
+    public void delUser(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
+
+        user.setIsDel(true);
+        userRepository.save(user);
+
+        kafkaEvent(userId, user.getName(), UserEventType.DELETE);
+    }
+
+    private void kafkaEvent(Long userId, String name, UserEventType eventType) {
+        UserEvent userEvent = UserEvent.builder()
+            .userId( userId )
+            .name( name )
+            .eventType( eventType ) //회원가입에서 여기 이부분만 다름
+            .build();
+
+        kafkaTemplate.send("user-topic", String.valueOf(userId), userEvent)
             .whenComplete((result, ex) -> {
                 if (ex == null) {
                     log.info("[Kafka Success] Topic: {}, Offset: {}",

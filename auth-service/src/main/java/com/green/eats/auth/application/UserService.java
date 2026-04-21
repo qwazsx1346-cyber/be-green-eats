@@ -4,7 +4,9 @@ import com.green.eats.auth.application.model.UserSigninReq;
 import com.green.eats.auth.application.model.UserSignupReq;
 import com.green.eats.auth.application.model.UserUpdateReq;
 import com.green.eats.auth.entity.User;
+import com.green.eats.auth.exception.UserErrorCode;
 import com.green.eats.common.constants.UserEventType;
+import com.green.eats.common.exception.BusinessException;
 import com.green.eats.common.model.UserEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -71,13 +73,9 @@ public class UserService {
         log.info("signedUser: {}", signedUser);
         //!를 붙여줌으로서 양쪽값이 같아야 notFoundUser가 호출됨
         if(signedUser == null || !passwordEncoder.matches( req.getPassword(), signedUser.getPassword())) {
-            notFoundUser();
+            notFoundUserAndNotMatchedPassword();
         }
         return signedUser;
-    }
-
-    private void notFoundUser() {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이디, 비밀번호를 확인해 주세요.");
     }
 
     @Transactional
@@ -140,6 +138,10 @@ public class UserService {
                     log.error("[Kafka Failure] 원인: {}", ex.getMessage());
                 }
             });
+    }
+
+    private void notFoundUserAndNotMatchedPassword() {
+        throw BusinessException.of(UserErrorCode.CHECK_EMAIL_PASSWORD);
     }
 
 }

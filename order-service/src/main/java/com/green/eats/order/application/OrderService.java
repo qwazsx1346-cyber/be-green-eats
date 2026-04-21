@@ -1,5 +1,8 @@
 package com.green.eats.order.application;
 
+import com.green.eats.common.exception.BusinessException;
+import com.green.eats.common.exception.CommonErrorCode;
+import com.green.eats.order.application.exception.OrderErrorCode;
 import com.green.eats.order.application.model.OrderPostReq;
 import com.green.eats.order.entity.Order;
 import com.green.eats.order.entity.OrderItem;
@@ -18,11 +21,15 @@ public class OrderService {
   @Transactional
   public Long postOrder(Long userId, OrderPostReq req) {
     userCacheRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("사용자 정보가 없습니다."));
+        .orElseThrow( () -> new BusinessException(CommonErrorCode.NO_EXISTED_USER) );
 
     Long totalAmount = req.getItems().stream()
         .mapToLong(item -> item.getQuantity() * item.getPrice())
         .sum();
+
+    if (!totalAmount.equals(req.getTotalAmount())) { //Long != Long, ==, != 비교 안된다.
+        throw BusinessException.of( OrderErrorCode.NOT_MATCHED_ALL_AMOUNT );
+    }
 
     // 1. 주문 마스터 생성
     Order order = Order.builder()
@@ -41,6 +48,6 @@ public class OrderService {
       order.addOrderItem(item); // 연관 관계 편의 메소드 활용
     });
 
-    return orderRepository.save(order).getId();
+    return orderRepository.save(order).getId(); //insert후 pk값 리턴  .  .  은 체이닝 기법
   }
 }

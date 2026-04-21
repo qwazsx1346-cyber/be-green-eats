@@ -33,7 +33,7 @@ public class WebSecurityConfiguration {
         //인가처리 (권한처리)
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/order/**").authenticated() //막아야될거 적어준것
-            .requestMatchers("/api/store/menu").hasRole(EnumUserRole.ADMIN.name())
+//            .requestMatchers("/api/store/menu").hasRole(EnumUserRole.ADMIN.name()) 여기 주소는 ADMIN만 접근가능하도록 함
             .anyRequest().permitAll() //이외에 것들은 다 허용한다는 뜻.
             //anyRequest().authenticated()얘네는 무조건 허용한다는 뜻
             //막아야되는 애들 걸려면  anyRequest. permitAll로 해줘야함

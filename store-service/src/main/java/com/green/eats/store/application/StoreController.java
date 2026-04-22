@@ -1,21 +1,21 @@
 package com.green.eats.store.application;
 
 import com.green.eats.common.auth.UserContext;
+import com.green.eats.common.model.MenuGetClientRes;
 import com.green.eats.common.model.ResultResponse;
 import com.green.eats.common.model.UserDto;
 import com.green.eats.store.application.model.MenuGetRes;
 import com.green.eats.store.application.model.MenuPostReq;
-import com.green.eats.store.entity.Menu;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
-//@RequestMapping("/api/store") yaml파일 1~3번라인 에서 따로 설정해줬기 때문에 필요없음
 @RequiredArgsConstructor
 public class StoreController {
     private final StoreService storeService;
@@ -36,9 +36,14 @@ public class StoreController {
 
         List<MenuGetRes> menus = storeService.getAllMenus();
         return ResultResponse.builder()
-                .resultMessage( String.format("%d rows", menus.size()) )
-                .resultData( menus )
-                .build();
+            .resultMessage( String.format("%d rows", menus.size()) )
+            .resultData( menus )
+            .build();
     }
 
+    @GetMapping("/menu/list")
+    public Map<Long, MenuGetClientRes> getAllMenus(@RequestParam List<Long> menuIds) {
+        log.info("menuIds: {}, size: {}", menuIds, menuIds.size());
+        return storeService.getMenuListByIds(menuIds);
+    }
 }

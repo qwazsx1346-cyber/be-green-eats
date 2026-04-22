@@ -1,4 +1,4 @@
-package com.green.eats.order.application.exception;
+package com.green.eats.order.exception;
 
 import com.green.eats.common.exception.ErrorCode;
 import lombok.Getter;

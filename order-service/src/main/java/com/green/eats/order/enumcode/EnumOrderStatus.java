@@ -1,4 +1,4 @@
-package com.green.eats.order.application.enumcode;
+package com.green.eats.order.enumcode;
 
 import com.green.eats.common.enumcode.AbstractEnumCodeConverter;
 import com.green.eats.common.enumcode.EnumMapperType;

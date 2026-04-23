@@ -8,6 +8,8 @@ import com.green.eats.auth.exception.UserErrorCode;
 import com.green.eats.common.constants.UserEventType;
 import com.green.eats.common.exception.BusinessException;
 import com.green.eats.common.model.UserEvent;
+import com.green.eats.common.outbox.Outbox;
+import com.green.eats.common.outbox.OutboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Service
@@ -24,6 +27,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final OutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
     public void signup(UserSignupReq req) {
         //비밀번호 암호화해서 담기
@@ -50,7 +55,7 @@ public class UserService {
             //아래는 내가 보내고싶은 데이터들
             .userId( newUser.getId() )
             .name( newUser.getName() )
-            .eventType( UserEventType.CREATE )
+            .eventType( UserEventType.USER_CREATE)
             .build();
 
         kafkaTemplate.send("user-topic", String.valueOf(newUser.getId()), userEvent)
@@ -95,7 +100,7 @@ public class UserService {
         UserEvent userEvent = UserEvent.builder()
             .userId( user.getId() )
             .name( user.getName() )
-            .eventType( UserEventType.UPDATE ) //회원가입에서 여기 이부분만 다름
+            .eventType( UserEventType.USER_UPDATE) //회원가입에서 여기 이부분만 다름
             .build();
 
         kafkaTemplate.send("user-topic", String.valueOf(user.getId()), userEvent)
@@ -111,36 +116,47 @@ public class UserService {
     }
 
     //@Transactional 이걸 붙이면 userRepository.save(user); 이 작업 안해줘도 됨.
+    @Transactional
     public void delUser(Long userId) {
-        User user = userRepository.findById(userId)
-            .orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."));
+        User user = userRepository.findById(userId).orElseThrow();
+        user.setIsDel( true );
 
-        user.setIsDel(true);
-        userRepository.save(user);
-
-        kafkaEvent(userId, user.getName(), UserEventType.DELETE);
-    }
-
-    private void kafkaEvent(Long userId, String name, UserEventType eventType) {
         UserEvent userEvent = UserEvent.builder()
-            .userId( userId )
-            .name( name )
-            .eventType( eventType ) //회원가입에서 여기 이부분만 다름
+            .userId( user.getId() )
+            .name( user.getName() )
+            .eventType( UserEventType.USER_DELETED)
             .build();
 
-        kafkaTemplate.send("user-topic", String.valueOf(userId), userEvent)
-            .whenComplete((result, ex) -> {
-                if (ex == null) {
-                    log.info("[Kafka Success] Topic: {}, Offset: {}",
-                        result.getRecordMetadata().topic(),
-                        result.getRecordMetadata().offset());
-                } else  {
-                    log.error("[Kafka Failure] 원인: {}", ex.getMessage());
-                }
-            });
+        kafkaSend(userEvent);
+    }
+
+    private void kafkaSend(UserEvent userEvent) {
+        String payload = objectMapper.writeValueAsString(userEvent);
+        Outbox outbox = Outbox.builder()
+            .topic("user-topic")
+            .aggregateId( userEvent.getUserId() )
+            .eventType( userEvent.getEventType().name() )
+            .payload( payload )
+            .build();
+
+        outboxRepository.save(outbox);
+
+//        kafkaTemplate.send("user-topic", String.valueOf(userEvent.getUserId()), userEvent)
+//                .whenComplete((result, ex) -> {
+//                    if (ex == null) {
+//                        // 성공 시 로그
+//                        log.info("✅ [Kafka Success] Topic: {}, Offset: {}",
+//                                result.getRecordMetadata().topic(),
+//                                result.getRecordMetadata().offset());
+//                    } else {
+//                        // 실패 시 로그
+//                        log.error("❌ [Kafka Failure] 원인: {}", ex.getMessage());
+//                    }
+//                });
     }
 
     private void notFoundUserAndNotMatchedPassword() {
+        //throw new BusinessException(UserErrorCode.CHECK_EMAIL_PASSWORD);
         throw BusinessException.of(UserErrorCode.CHECK_EMAIL_PASSWORD);
     }
 

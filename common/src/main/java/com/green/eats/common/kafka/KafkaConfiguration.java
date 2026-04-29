@@ -8,7 +8,7 @@ import org.springframework.kafka.support.converter.StringJacksonJsonMessageConve
 
 
 @Configuration
-@ConditionalOnProperty(prefix = "spring.kafka.consumer", name = "value-deserializer")
+@ConditionalOnProperty(prefix = "spring.kafka.consumer", name = "value-deserializer") //yaml에 이 속성이 있는 친구만 빈등록하기
 public class KafkaConfiguration {
   @Bean
   public RecordMessageConverter converter() {
